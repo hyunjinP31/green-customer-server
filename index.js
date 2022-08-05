@@ -11,6 +11,7 @@ const dbinfo = fs.readFileSync('./database.json');
 const conf = JSON.parse(dbinfo);
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
+const multer = require('multer');
 
 
 
@@ -31,6 +32,29 @@ const connection = mysql.createConnection({
 
 app.use(express.json());
 app.use(cors());
+app.use("/upload", express.static('upload'));
+
+const storage = multer.diskStorage({
+    destination: "./upload",
+    filename: function(req, file, cb){
+        cb(null, file.originalname);
+    }
+})
+
+const upload = multer({
+    storage: storage,
+    limits: { fieldSize: 1000000 }
+})
+
+//upload 경로로 포스트 요청이 왔을 때 응답
+app.post('/upload', upload.single("img"), function(req, res, next){
+    res.send({
+        imageUrl: req.file.filename
+    })
+})
+
+
+
 //app.get('경로', callback함수)
 //connection.query("쿼리문", callback함수)
 app.get('/customers', async (req, res) => {
@@ -46,6 +70,8 @@ app.get('/customers', async (req, res) => {
         }
     )
 })
+
+
 
 app.get('/customers/:id', async (req, res) => {
     //req가 가진 값중 params 객체에 담긴 id라는 key를 id라는 변수로 바로 구조분해할당
@@ -168,6 +194,24 @@ app.post('/login', async (req, res)=>{
         }else{
             res.send(null);
         }
+    })
+})
+
+app.post('/gallery', async ( req, res )=> {
+    const { usermail, title, imgurl, desc }= req.body;
+    connection.query(
+        "insert into customer_gallery (`title`, `imgUrl`,`desc`,`usermail`) value(?,?,?,?)",
+        [title, imgurl, desc, usermail] ,
+        (err, result)=>{
+            res.send("등록완료");
+        }
+    )
+})
+//gallery 겟 요청시
+app.get("/gallery", async (req, res)=>{
+    connection.query("select * from customer_gallery",
+    (err, result)=>{
+        res.send(result);
     })
 })
 
