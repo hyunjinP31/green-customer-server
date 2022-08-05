@@ -208,7 +208,7 @@ app.post('/gallery', async ( req, res )=> {
     )
 })
 //gallery 겟 요청시
-app.get("/gallery", async (req, res)=>{
+app.get("/gallerylist", async (req, res)=>{
     connection.query("select * from customer_gallery",
     (err, result)=>{
         res.send(result);
